@@ -13,6 +13,7 @@ import { UsuarioService } from './usuario.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { AuthDto } from './dto/auth.dto';
 
 @Controller('user')
 export class UsuarioController {
@@ -21,6 +22,11 @@ export class UsuarioController {
   @Post('register')
   create(@Body() createUsuarioDto: CreateUsuarioDto) {
     return this.usuarioService.create(createUsuarioDto);
+  }
+
+  @Post('login')
+  login(@Body() authDto: AuthDto) {
+    return this.usuarioService.loginUser(authDto);
   }
 
   @Get('list')

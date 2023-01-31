@@ -7,10 +7,11 @@ import { ErrorHandleDBService } from 'src/common/services/errorHandleDBException
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './strategies/jwt-strategy';
 
 @Module({
   controllers: [UsuarioController],
-  providers: [UsuarioService, ErrorHandleDBService],
+  providers: [UsuarioService, ErrorHandleDBService, JwtStrategy],
   imports: [
     ConfigModule,
     TypeOrmModule.forFeature([Usuario]),
@@ -28,6 +29,6 @@ import { JwtModule } from '@nestjs/jwt';
       },
     }),
   ],
-  exports: [TypeOrmModule, JwtModule, PassportModule],
+  exports: [TypeOrmModule, JwtModule, PassportModule, JwtStrategy],
 })
 export class UsuarioModule {}

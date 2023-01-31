@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorHandleDBService } from 'src/common/services/errorHandleDBException';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -8,6 +12,9 @@ import { Repository } from 'typeorm';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { validate as isUUID } from 'uuid';
 import * as bcrypt from 'bcrypt';
+import { AuthDto } from './dto/auth.dto';
+import { IJwtPayload } from './interfaces/jwt-payload.interface';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsuarioService {
@@ -15,6 +22,7 @@ export class UsuarioService {
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
     private readonly errorHandleDBException: ErrorHandleDBService,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(createUsuarioDto: CreateUsuarioDto) {
@@ -82,5 +90,36 @@ export class UsuarioService {
   async remove(id: string) {
     const deleteUsuario = await this.findOne(id);
     await this.usuarioRepository.remove(deleteUsuario);
+  }
+
+  async loginUser(authDto: AuthDto) {
+    const { user, password } = authDto;
+
+    const user_info = await this.usuarioRepository.findOne({
+      where: { user },
+      select: {
+        user: true,
+        password: true,
+        role: true,
+        id_usuario: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Credentials are not valid.');
+    }
+    if (!bcrypt.compareSync(password, user_info.password)) {
+      throw new UnauthorizedException('Credentials are not valid.');
+    }
+    return {
+      ok: true,
+      ...user_info,
+      token: this.getJwtToken({ id_usuario: user_info.id_usuario }),
+    };
+  }
+
+  private getJwtToken(payload: IJwtPayload) {
+    const token = this.jwtService.sign(payload);
+    return token;
   }
 }
